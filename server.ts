@@ -1200,15 +1200,35 @@ async function startServer() {
     });
     app.use(vite.middlewares);
   } else {
-    // Serve static files in production
-    app.use(express.static(distPath));
+    // Serve static files in production, but do not serve index.html automatically
+    app.use(express.static(distPath, { index: false }));
     
     // Handle SPA routing: serve index.html for any unknown routes
     app.get('*', (req, res, next) => {
       if (req.path.startsWith('/api')) return next();
       const indexPath = path.join(distPath, 'index.html');
       if (fs.existsSync(indexPath)) {
-        res.sendFile(indexPath);
+        let html = fs.readFileSync(indexPath, 'utf-8');
+        
+        // Inject Retell Widget if keys are present
+        const agentId = process.env.VITE_RETELL_CHAT_AGENT_ID;
+        const publicKey = process.env.VITE_RETELL_PUBLIC_KEY;
+        
+        if (agentId && publicKey && html.includes('<!-- RETELL_WIDGET -->')) {
+          const widgetScript = `<script 
+            id="retell-widget" 
+            src="https://dashboard.retellai.com/retell-widget.js" 
+            type="module" 
+            data-public-key="${publicKey}" 
+            data-agent-id="${agentId}"
+            data-show-ai-popup="true"
+            data-title="Chat with us!"
+            data-color="#FF5A5F"
+          ></script>`;
+          html = html.replace('<!-- RETELL_WIDGET -->', widgetScript);
+        }
+        
+        res.send(html);
       } else {
         res.status(404).send('Production build not found. Please run npm run build.');
       }
