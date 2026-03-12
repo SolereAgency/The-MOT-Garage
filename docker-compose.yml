@@ -10,6 +10,7 @@ services:
       - SUPABASE_URL=${SUPABASE_URL}
       - SUPABASE_ANON_KEY=${SUPABASE_ANON_KEY}
       - STRIPE_SECRET_KEY=${STRIPE_SECRET_KEY}
+      - STRIPE_PUBLISHABLE_KEY=${STRIPE_PUBLISHABLE_KEY}
       - EMAIL_USER=${EMAIL_USER}
       - EMAIL_PASS=${EMAIL_PASS}
       - GOOGLE_SERVICE_ACCOUNT_BASE64=${GOOGLE_SERVICE_ACCOUNT_BASE64}
@@ -21,10 +22,21 @@ services:
       - DVLA_API_KEY=${DVLA_API_KEY}
       - RETELL_API_KEY=${RETELL_API_KEY}
       - RETELL_AGENT_ID=${RETELL_AGENT_ID}
-      - STRIPE_PUBLISHABLE_KEY=${STRIPE_PUBLISHABLE_KEY}
+      - VITE_STRIPE_PUBLISHABLE_KEY=${STRIPE_PUBLISHABLE_KEY}
+      - VITE_RETELL_AGENT_ID=${RETELL_AGENT_ID}
+      - VITE_RETELL_CHAT_AGENT_ID=${VITE_RETELL_CHAT_AGENT_ID}
+      - VITE_RETELL_PUBLIC_KEY=${VITE_RETELL_PUBLIC_KEY}
     labels:
       - "traefik.enable=true"
-      - "traefik.http.routers.motgarage.rule=Host(`www.furandclaws.com`, `furandclaws.com`)"
-      - "traefik.http.routers.motgarage.entrypoints=websecure"
-      - "traefik.http.routers.motgarage.tls.certresolver=myresolver"
+      - "traefik.http.routers.motgarage.rule=Host(`www.furandclaws.com`) || Host(`furandclaws.com`)"
+      - "traefik.http.routers.motgarage.entrypoints=web,websecure"
+      - "traefik.http.routers.motgarage.tls=true"
+      - "traefik.http.routers.motgarage.tls.certresolver=mytlschallenge"
       - "traefik.http.services.motgarage.loadbalancer.server.port=3000"
+      - "traefik.docker.network=n8n_default"
+    networks:
+      - n8n_default
+
+networks:
+  n8n_default:
+    external: true
